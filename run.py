@@ -9,7 +9,7 @@ task_cfg = TaskConfig(
     eval_type='service',   # 评测类型，SERVICE表示评测推理服务
     datasets=[
     # 'math_500',  # 数据集名称
-    'fineval_definition'   
+    'fineval', 'fineval_definition'   
     ],
     dataset_args={ # EvalScope内置支持，无需指定数据集ID
     'fineval_definition': {'subset_list': ['main'], 'few_shot_num': 0},
@@ -22,7 +22,7 @@ task_cfg = TaskConfig(
         'top_p': 0.95,        # top-p采样 (deepseek 报告推荐值)
         'n': 1                # 每个请求产生的回复数量 (注意 lmdeploy 目前只支持 n=1)
     },
-    stream=True               # 是否使用流式请求，推荐设置为True防止请求超时
+    stream=False               # 是否使用流式请求，推荐设置为True防止请求超时
 )
 
 run_task(task_cfg=task_cfg)

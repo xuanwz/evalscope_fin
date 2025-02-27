@@ -56,6 +56,7 @@ class DataAdapter(ABC):
         self.query_template = query_template
         self.config_kwargs = kwargs
         self.category_map = kwargs.get('category_map', {})
+        self.eval_need_q = kwargs.get('eval_need_q', False)
 
     def load(self,
              dataset_name_or_path: str = None,
@@ -292,6 +293,7 @@ class DataAdapter(ABC):
                         e.g. 'A', extracted from get_gold_answer method.
             pred (Any): The predicted answer. Usually a string for chat/multiple-choice-questions.
                         e.g. 'B', extracted from parse_pred_result method.
+            input_d (dict, optional): The input data. Default is None.
 
         Returns:
             The match result. Usually a score (float) for chat/multiple-choice-questions.

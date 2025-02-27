@@ -7,7 +7,7 @@ from evalscope.utils.utils import ResponseParser
 
 @Benchmark.register(
     name='fineval',
-    dataset_id=r'D:\working_projects\compass\evalscope\evalscope\benchmarks\fineval',
+    dataset_id=r'D:\working_projects\compass\evalscope_fin\evalscope\benchmarks\fineval',
     model_adapter=ChatGenerationModelAdapter,
     subset_list=['accounting', 'finance', 'economy','certificate'],
     metric_list=['AverageAccuracy'],

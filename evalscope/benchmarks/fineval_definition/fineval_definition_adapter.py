@@ -10,7 +10,7 @@ import re
 
 @Benchmark.register(
     name='fineval_definition',
-    dataset_id=r'D:\working_projects\compass\evalscope\evalscope\benchmarks\fineval_definition',
+    dataset_id=r'D:\working_projects\compass\evalscope_fin\evalscope\benchmarks\fineval_definition',
     model_adapter=ChatGenerationModelAdapter,
     subset_list=['main'],
     metric_list=['AverageAccuracy'],
@@ -24,6 +24,7 @@ class IQuizAdapter(DataAdapter):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.choices = []
+        self.eval_need_q = True
 
 
     def load_from_disk(self, dataset_path: str, subset_list: list = None, work_dir: str = None, **kwargs) -> dict:

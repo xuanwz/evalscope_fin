@@ -203,8 +203,10 @@ class Evaluator(object):
             answer_content = self.data_adapter.parse_pred_result(
                 result=answer_content, raw_input_d=raw_input_d, eval_type=self.eval_type)
             gold_content = self.data_adapter.get_gold_answer(raw_input_d)
-
-            review_result = self.data_adapter.match(gold_content, answer_content, raw_input_d)
+            if self.data_adapter.eval_need_q:
+                review_result = self.data_adapter.match(gold_content, answer_content, raw_input_d)
+            else:
+                review_result = self.data_adapter.match(gold_content, answer_content)
             choice[ReviewKeys.REVIEW] = {
                 ReviewKeys.GOLD: gold_content,
                 ReviewKeys.PRED: answer_content,
