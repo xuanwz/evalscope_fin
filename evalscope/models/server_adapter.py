@@ -26,6 +26,8 @@ class ServerModelAdapter(BaseModelAdapter):
         self.model_id = model_id
         self.api_key = api_key
 
+
+
         self.client = openai.OpenAI(
             api_key=api_key,
             base_url=self.api_url,

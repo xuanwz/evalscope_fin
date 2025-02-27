@@ -44,15 +44,27 @@ def initialize_model_adapter(task_cfg: 'TaskConfig', model_adapter_cls: 'BaseMod
         from evalscope.models import CustomModelAdapter
         return CustomModelAdapter(custom_model=task_cfg.model)
     elif task_cfg.eval_type == EvalType.SERVICE:
-        from evalscope.models import ServerModelAdapter
-        return ServerModelAdapter(
-            api_url=task_cfg.api_url,
-            model_id=task_cfg.model,
-            api_key=task_cfg.api_key,
-            seed=task_cfg.seed,
-            timeout=task_cfg.timeout,
-            stream=task_cfg.stream,
+        if task_cfg.api_type == 'openai':
+            from evalscope.models import ServerModelAdapter
+            return ServerModelAdapter(
+                api_url=task_cfg.api_url,
+                model_id=task_cfg.model,
+                api_key=task_cfg.api_key,
+                seed=task_cfg.seed,
+                timeout=task_cfg.timeout,
+                stream=task_cfg.stream,
         )
+        elif task_cfg.api_type == 'request':
+            from evalscope.models import RequestModelAdapter
+            return RequestModelAdapter(
+                api_url=task_cfg.api_url,
+                model_id=task_cfg.model,
+                api_key=task_cfg.api_key,
+                headers=task_cfg.headers,
+                seed=task_cfg.seed,
+                timeout=task_cfg.timeout,
+                stream=task_cfg.stream,
+            )
     else:
         return model_adapter_cls(
             model=base_model, generation_config=task_cfg.generation_config, chat_template=task_cfg.chat_template)

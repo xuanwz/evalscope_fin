@@ -68,6 +68,8 @@ class TaskConfig:
     seed: Optional[int] = 42
     api_url: Optional[str] = None  # Only used for server model
     api_key: Optional[str] = 'EMPTY'  # Only used for server model
+    api_type: Optional[str] = 'openai'  # Only used for server model
+    headers: Optional[dict] = None  # Only used for server model
     timeout: Optional[float] = 60  # Only used for server model
     stream: Optional[bool] = False  # Whether to stream the response
 
