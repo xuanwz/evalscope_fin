@@ -283,7 +283,7 @@ class DataAdapter(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def match(self, gold: Any, pred: Any) -> Any:
+    def match(self, gold: Any, pred: Any, input_d: dict = None) -> Any:
         """
         Match the gold answer and the predicted answer.
 

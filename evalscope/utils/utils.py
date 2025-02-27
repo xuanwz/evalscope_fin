@@ -101,6 +101,7 @@ class ResponseParser:
         options_concat = '|'.join([str(i) for i in options])
 
         patterns = [
+            fr'boxed{{([{options_concat}]+)}}',
             f'答案是?\s?([{options_concat}])',
             f'答案是?\s?：([{options_concat}])',
             f'答案是?\s?:([{options_concat}])',
