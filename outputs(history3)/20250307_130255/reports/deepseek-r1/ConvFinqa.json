@@ -1,0 +1,31 @@
+{
+    "name": "deepseek-r1_ConvFinqa",
+    "dataset_name": "ConvFinqa",
+    "model_name": "deepseek-r1",
+    "score": 0.821,
+    "metrics": [
+        {
+            "name": "AverageAccuracy",
+            "num": 1000,
+            "score": 0.821,
+            "macro_score": 0.821,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 1000,
+                    "score": 0.821,
+                    "macro_score": 0.821,
+                    "subsets": [
+                        {
+                            "name": "main",
+                            "score": 0.821,
+                            "num": 1000
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

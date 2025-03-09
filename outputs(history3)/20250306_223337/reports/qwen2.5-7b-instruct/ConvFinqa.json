@@ -1,0 +1,31 @@
+{
+    "name": "qwen2.5-7b-instruct_ConvFinqa",
+    "dataset_name": "ConvFinqa",
+    "model_name": "qwen2.5-7b-instruct",
+    "score": 0.661,
+    "metrics": [
+        {
+            "name": "AverageAccuracy",
+            "num": 1000,
+            "score": 0.661,
+            "macro_score": 0.661,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 1000,
+                    "score": 0.661,
+                    "macro_score": 0.661,
+                    "subsets": [
+                        {
+                            "name": "main",
+                            "score": 0.661,
+                            "num": 1000
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

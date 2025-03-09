@@ -1,0 +1,31 @@
+{
+    "name": "deepseek-r1-distill-qwen-14b_FinQA",
+    "dataset_name": "FinQA",
+    "model_name": "deepseek-r1-distill-qwen-14b",
+    "score": 0.6192,
+    "metrics": [
+        {
+            "name": "AverageAccuracy",
+            "num": 998,
+            "score": 0.6192,
+            "macro_score": 0.6192,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 998,
+                    "score": 0.6192,
+                    "macro_score": 0.6192,
+                    "subsets": [
+                        {
+                            "name": "main",
+                            "score": 0.6192,
+                            "num": 998
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

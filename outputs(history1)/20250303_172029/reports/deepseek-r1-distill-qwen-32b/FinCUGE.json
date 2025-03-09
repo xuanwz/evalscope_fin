@@ -1,0 +1,31 @@
+{
+    "name": "deepseek-r1-distill-qwen-32b_FinCUGE",
+    "dataset_name": "FinCUGE",
+    "model_name": "deepseek-r1-distill-qwen-32b",
+    "score": 0.231,
+    "metrics": [
+        {
+            "name": "AverageAccuracy",
+            "num": 1000,
+            "score": 0.231,
+            "macro_score": 0.231,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 1000,
+                    "score": 0.231,
+                    "macro_score": 0.231,
+                    "subsets": [
+                        {
+                            "name": "main",
+                            "score": 0.231,
+                            "num": 1000
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,31 @@
+{
+    "name": "deepseek-r1-distill-qwen-32b_senti_data",
+    "dataset_name": "senti_data",
+    "model_name": "deepseek-r1-distill-qwen-32b",
+    "score": 0.789,
+    "metrics": [
+        {
+            "name": "AverageAccuracy",
+            "num": 1000,
+            "score": 0.789,
+            "macro_score": 0.789,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 1000,
+                    "score": 0.789,
+                    "macro_score": 0.789,
+                    "subsets": [
+                        {
+                            "name": "main",
+                            "score": 0.789,
+                            "num": 1000
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

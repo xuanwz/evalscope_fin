@@ -3,18 +3,18 @@ from evalscope.constants import EvalType
 from evalscope.metrics import exact_match
 from evalscope.models import ChatGenerationModelAdapter
 from evalscope.utils.utils import ResponseParser
-
+import os
 
 @Benchmark.register(
     name='fineval',
-    dataset_id=r'D:\working_projects\compass\evalscope_fin\evalscope\benchmarks\fineval',
+    dataset_id=os.path.dirname(__file__),
     model_adapter=ChatGenerationModelAdapter,
     subset_list=['accounting', 'finance', 'economy','certificate'],
     metric_list=['AverageAccuracy'],
     few_shot_num=0,
     train_split=None,
     eval_split='test',
-    system_prompt='你是一个金融知识专家，下面是一道中国金融相关考试的问题，请选出其中的正确答案。你可以一步步思考，并在最后将最终答案的选项放入 \\boxed{}',  # noqa: E501
+    system_prompt='',  # noqa: E501
 )
 class IQuizAdapter(DataAdapter):
 
@@ -62,9 +62,10 @@ class IQuizAdapter(DataAdapter):
             
             # 构建测试集数据
             test_data = []
+            prompt='你是一个金融知识专家，下面是一道中国金融相关考试的问题，请选出其中的正确答案。你可以一步步思考，并在最后将最终答案的选项放入 \\boxed{}',
             for _, row in df.iterrows():
                 item = {
-                    'question': row['question'],
+                    'question': f'{prompt}\n{row["question"]}',
                     'answer': row['answer']
                 }
                 test_data.append(item)

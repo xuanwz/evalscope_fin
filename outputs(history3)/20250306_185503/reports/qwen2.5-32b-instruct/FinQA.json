@@ -1,0 +1,31 @@
+{
+    "name": "qwen2.5-32b-instruct_FinQA",
+    "dataset_name": "FinQA",
+    "model_name": "qwen2.5-32b-instruct",
+    "score": 0.714,
+    "metrics": [
+        {
+            "name": "AverageAccuracy",
+            "num": 1000,
+            "score": 0.714,
+            "macro_score": 0.714,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 1000,
+                    "score": 0.714,
+                    "macro_score": 0.714,
+                    "subsets": [
+                        {
+                            "name": "main",
+                            "score": 0.714,
+                            "num": 1000
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

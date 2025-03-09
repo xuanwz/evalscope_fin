@@ -55,6 +55,7 @@ class TaskConfig:
     stage: str = EvalStage.ALL
     limit: Optional[int] = None
     eval_batch_size: int = 1
+    review_batch_size: int = 1
 
     # Cache and working directory arguments
     mem_cache: bool = False  # Deprecated, will be removed in v1.0.0.
@@ -72,6 +73,7 @@ class TaskConfig:
     headers: Optional[dict] = None  # Only used for server model
     timeout: Optional[float] = 60  # Only used for server model
     stream: Optional[bool] = False  # Whether to stream the response
+
 
     def __post_init__(self):
         if (not self.model_id) and self.model:

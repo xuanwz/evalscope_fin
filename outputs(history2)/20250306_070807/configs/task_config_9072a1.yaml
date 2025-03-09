@@ -1,0 +1,65 @@
+api_key: sk-40a2cf1184a74bcc9e74b53155e665a5
+api_type: request
+api_url: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+chat_template: null
+dataset_args:
+  ConvFinqa:
+    dataset_id: D:\working_projects\compass\evalscope_fin\evalscope\benchmarks\ConvFinqa
+    eval_split: test
+    few_shot_num: 0
+    few_shot_random: false
+    metric_list:
+    - AverageAccuracy
+    name: ConvFinqa
+    prompt_template: null
+    query_template: null
+    subset_list:
+    - main
+    system_prompt: ''
+    train_split: null
+  FinQA:
+    dataset_id: D:\working_projects\compass\evalscope_fin\evalscope\benchmarks\FinQA
+    eval_split: test
+    few_shot_num: 0
+    few_shot_random: false
+    metric_list:
+    - AverageAccuracy
+    name: FinQA
+    prompt_template: null
+    query_template: null
+    subset_list:
+    - main
+    system_prompt: ''
+    train_split: null
+dataset_dir: C:\Users\OMEN\.cache\modelscope\hub\datasets
+dataset_hub: modelscope
+datasets:
+- FinQA
+- ConvFinqa
+debug: false
+dry_run: false
+eval_backend: Native
+eval_batch_size: 10
+eval_config: null
+eval_type: service
+generation_config:
+  max_tokens: 4096
+  n: 1
+  temperature: 0.6
+  top_p: 0.95
+headers: null
+limit: 1000
+mem_cache: false
+model: deepseek-r1-distill-qwen-14b
+model_args:
+  precision: torch.float16
+  revision: master
+model_id: deepseek-r1-distill-qwen-14b
+outputs: null
+seed: 42
+stage: all
+stream: true
+template_type: null
+timeout: 60
+use_cache: null
+work_dir: ./outputs\20250306_070807

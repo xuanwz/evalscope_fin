@@ -1,0 +1,31 @@
+{
+    "name": "deepseek-r1_FinQA",
+    "dataset_name": "FinQA",
+    "model_name": "deepseek-r1",
+    "score": 0.7114,
+    "metrics": [
+        {
+            "name": "AverageAccuracy",
+            "num": 991,
+            "score": 0.7114,
+            "macro_score": 0.7114,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 991,
+                    "score": 0.7114,
+                    "macro_score": 0.7114,
+                    "subsets": [
+                        {
+                            "name": "main",
+                            "score": 0.7114,
+                            "num": 991
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

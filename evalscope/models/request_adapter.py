@@ -1,6 +1,8 @@
 import requests
 from evalscope.models.base_adapter import BaseModelAdapter
 from typing import List, Union, Optional
+import json
+import time
 
 from evalscope.utils.logger import get_logger
 
@@ -12,7 +14,7 @@ class RequestModelAdapter(BaseModelAdapter):
     """
 
     def __init__(self, api_url: str, model_id: str, api_key: str = 'EMPTY', **kwargs):
-        self.api_url = api_url.rstrip('/').rsplit('/chat/completions', 1)[0]
+        self.api_url = api_url
         self.model_id = model_id
         self.api_key = api_key
 
@@ -75,50 +77,105 @@ class RequestModelAdapter(BaseModelAdapter):
 
         return request_json
 
-    def send_request_with_retry(self, request_json: dict, retry_count: int = 5) -> dict:
+    def send_request_with_retry(self, request_json: dict, retry_count: int = 3) -> Optional[dict]:
         """使用 requests 库发送请求并处理响应，带重试逻辑。"""
         headers = self.headers if self.headers else {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
         }
+        
+        # 设置严格的超时限制
+        timeout = (100, 300)  # (连接超时, 读取超时)
 
         for attempt in range(retry_count):
             try:
-                response = requests.post(self.api_url + '/chat/completions', headers=headers, json=request_json, stream=self.stream)
-                response.raise_for_status()  # 对于错误响应抛出异常
+                response = requests.post(
+                    self.api_url,
+                    headers=headers,
+                    json=request_json,
+                    stream=self.stream,
+                    timeout=timeout
+                )
+                response.raise_for_status()
                 
                 if self.stream:
                     return self._collect_stream_response(response)
                 return response.json()
-            except requests.exceptions.HTTPError as http_err:
-                logger.error(f'HTTP error occurred: {http_err}')  # 记录 HTTP 错误
-                if attempt < retry_count - 1:
-                    logger.info(f'正在重试... 第 {attempt + 2} 次尝试')
-                else:
-                    raise
+                
             except Exception as e:
-                logger.error(f'An error occurred: {e}')  # 记录其他错误
+                logger.error(f'请求错误 (尝试 {attempt + 1}/{retry_count}): {str(e)}')
                 if attempt < retry_count - 1:
-                    logger.info(f'正在重试... 第 {attempt + 2} 次尝试')
+                    wait_time = min(2 ** attempt, 30)  # 最大等待30秒
+                    time.sleep(wait_time)
                 else:
-                    raise
+                    # 最后一次重试失败，返回 None 而不是抛出异常
+                    logger.error(f'所有重试均失败，跳过该请求')
+                    return None
 
     def _collect_stream_response(self, response) -> dict:
         """Collect and process stream response."""
-        collected_messages = []
+        try:
+            # 尝试直接解析整个响应
+            if hasattr(response, 'json'):
+                return response.json()
+        except:
+            pass
+            
+        # 如果不是完整JSON，则按流式处理
+        collected_content = ""
+        reasoning_content = ""
+        has_reasoning = False
+        usage = None
+        
         for line in response.iter_lines():
             if line:
-                message = line.decode('utf-8')
-                collected_messages.append(message)
-
-        # 如果没有使用流式，返回的结构需要包含choices
-        return {
+                # 移除 "data: " 前缀并解析 JSON
+                line_text = line.decode('utf-8')
+                if line_text.startswith('data: '):
+                    json_str = line_text[6:]  # 跳过 "data: " 前缀
+                    if json_str.strip() == '[DONE]':
+                        break
+                    
+                    try:
+                        chunk = json.loads(json_str)
+                        if 'choices' in chunk and len(chunk['choices']) > 0:
+                            delta = chunk['choices'][0].get('delta', {})
+                            if 'content' in delta:
+                                collected_content += delta['content']
+                            if 'reasoning_content' in delta:
+                                has_reasoning = True
+                                reasoning_content += delta['reasoning_content']
+                        
+                        # 收集使用情况统计（如果有）
+                        if 'usage' in chunk:
+                            usage = chunk['usage']
+                    except json.JSONDecodeError as e:
+                        logger.error(f"JSON解析错误: {e}, 行内容: {json_str}")
+                else:
+                    # 尝试直接解析整行为JSON
+                    try:
+                        return json.loads(line_text)
+                    except:
+                        logger.debug(f"无法解析行: {line_text}")
+        
+        # 构建与非流式响应格式一致的结构
+        result = {
             'choices': [{
                 'message': {
-                    'content': ''.join(collected_messages)
+                    'content': collected_content
                 }
             }]
-        }  # 返回处理后的消息，包含choices结构
+        }
+        
+        # 如果存在reasoning_content，则添加到结果中
+        if has_reasoning:
+            result['choices'][0]['message']['reasoning_content'] = reasoning_content
+        
+        if usage:
+            result['usage'] = usage
+            
+        return result
+
     def handle_request_error(self, e: Exception):
         logger.error(f'Error when calling API: {str(e)}')
         raise 

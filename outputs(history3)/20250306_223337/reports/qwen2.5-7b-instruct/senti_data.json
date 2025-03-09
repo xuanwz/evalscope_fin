@@ -1,0 +1,31 @@
+{
+    "name": "qwen2.5-7b-instruct_senti_data",
+    "dataset_name": "senti_data",
+    "model_name": "qwen2.5-7b-instruct",
+    "score": 0.679,
+    "metrics": [
+        {
+            "name": "AverageAccuracy",
+            "num": 1000,
+            "score": 0.679,
+            "macro_score": 0.679,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 1000,
+                    "score": 0.679,
+                    "macro_score": 0.679,
+                    "subsets": [
+                        {
+                            "name": "main",
+                            "score": 0.679,
+                            "num": 1000
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

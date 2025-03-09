@@ -1,0 +1,31 @@
+{
+    "name": "deepseek-r1-distill-qwen-7b_ConvFinqa",
+    "dataset_name": "ConvFinqa",
+    "model_name": "deepseek-r1-distill-qwen-7b",
+    "score": 66.031,
+    "metrics": [
+        {
+            "name": "AverageAccuracy",
+            "num": 1000,
+            "score": 66.031,
+            "macro_score": 66.031,
+            "categories": [
+                {
+                    "name": [
+                        "default"
+                    ],
+                    "num": 1000,
+                    "score": 66.031,
+                    "macro_score": 66.031,
+                    "subsets": [
+                        {
+                            "name": "main",
+                            "score": 66.031,
+                            "num": 1000
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,13 +1,25 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import os.path
 import random
+import time
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Union
-
+import requests
 from evalscope.constants import DEFAULT_DATASET_CACHE_DIR, AnswerKeys, EvalType, HubType
 from evalscope.metrics.named_metrics import metric_registry
 from evalscope.report import Report, ReportGenerator
 from evalscope.utils.logger import get_logger
+import yaml
+
+# 获取当前文件的目录
+current_dir = os.path.dirname(__file__)
+
+# 构建相对路径
+yaml_path = os.path.join(current_dir, 'llm_as_judge.yaml')
+
+# 读取 YAML 配置文件
+with open(yaml_path, 'r') as f:
+    config = yaml.safe_load(f)
 
 logger = get_logger()
 
@@ -45,6 +57,7 @@ class DataAdapter(ABC):
                     the form of A or B or C or D, do not output explanation:`
         """
         self.name = name
+
         self.dataset_id = dataset_id
         self.subset_list = subset_list
         self.metric_list = metric_list
@@ -282,6 +295,47 @@ class DataAdapter(ABC):
             The parsed answer. Depending on the dataset. Usually a string for chat.
         """
         raise NotImplementedError
+
+    def call_judger(self,messages, retry_count=0):
+        retry_limit = 5
+        """调用API"""
+        try:
+            data = {
+            "model": config['eval_model'],
+            "messages": messages,
+            "max_tokens": 4096,
+            "stream": False,
+            "temperature": 0.0,
+            "top_p": 0.9
+            }
+            response = requests.post(
+                config['eval_api_url'],
+                headers={
+            'Authorization': 'Bearer '+config['eval_api_key'],
+            'Content-Type': 'application/json'
+        },
+                json=data,
+                timeout=400
+            )
+            
+            if response.status_code == 200:
+                return response.json()['choices'][0]['message']['content']
+            else:
+                print(f'请求失败，状态码: {response.status_code}, 错误内容: {response.text}')
+                if retry_count < retry_limit:
+                    print(f'正在重试第 {retry_count + 1} 次...')
+                    time.sleep(1)
+                    return self.call_judger(messages, retry_count + 1)
+                return False
+                
+        except requests.RequestException as e:
+            print(f'API 请求异常: {e}')
+            if retry_count < retry_limit:
+                print(f'正在重试第 {retry_count + 1} 次...')
+                time.sleep(1)
+                return self.call_judger(messages, retry_count + 1)
+            return "false"
+
 
     @abstractmethod
     def match(self, gold: Any, pred: Any, input_d: dict = None) -> Any:

@@ -6,18 +6,19 @@ from evalscope.utils.utils import ResponseParser
 import requests
 import time
 import re
-
+import os
+from evalscope.evaluator.evaluator import Evaluator
 
 @Benchmark.register(
     name='fineval_definition',
-    dataset_id=r'D:\working_projects\compass\evalscope_fin\evalscope\benchmarks\fineval_definition',
+    dataset_id=os.path.dirname(__file__),
     model_adapter=ChatGenerationModelAdapter,
     subset_list=['main'],
     metric_list=['AverageAccuracy'],
     few_shot_num=0,
     train_split=None,
     eval_split='test',
-    system_prompt='请回答给出的金融名词定义问题，不要有除了答案外其余的回复。',  # noqa: E501
+    system_prompt='',  # noqa: E501
 )
 class IQuizAdapter(DataAdapter):
 
@@ -56,9 +57,10 @@ class IQuizAdapter(DataAdapter):
             
             # 构建测试集数据
             test_data = []
+            prompt = '请回答给出的金融名词定义问题，不要有除了答案外其余的回复。'
             for _, row in df.iterrows():
                 item = {
-                    'question': row['question'],
+                    'question': f'{prompt}\n{row["question"]}',
                     'answer': row['answer']
                 }
                 test_data.append(item)
@@ -90,48 +92,6 @@ class IQuizAdapter(DataAdapter):
         Parse the predicted result and extract proper answer.
         """
         return result
-
-
-
-    def call_judger(self,messages, retry_count=0):
-        retry_limit = 5
-        """调用API"""
-        try:
-            data = {
-            "model": "gpt-4o",
-            "messages": messages,
-            "max_tokens": 4096,
-            "stream": False,
-            "temperature": 0.0,
-            "top_p": 0.9
-            }
-            response = requests.post(
-                "https://www.apillm.online/v1/chat/completions",
-                headers={
-            'Authorization': 'Bearer sk-nsIxq2HnRLDlg7g8C699A6B6CbD045CdB1F0DcBd4811Bb37',
-            'Content-Type': 'application/json'
-        },
-                json=data,
-                timeout=400
-            )
-            
-            if response.status_code == 200:
-                return response.json()['choices'][0]['message']['content']
-            else:
-                print(f'请求失败，状态码: {response.status_code}, 错误内容: {response.text}')
-                if retry_count < retry_limit:
-                    print(f'正在重试第 {retry_count + 1} 次...')
-                    time.sleep(1)
-                    return self.call_judger(messages, retry_count + 1)
-                return False
-                
-        except requests.RequestException as e:
-            print(f'API 请求异常: {e}')
-            if retry_count < retry_limit:
-                print(f'正在重试第 {retry_count + 1} 次...')
-                time.sleep(1)
-                return self.call_judger(messages, retry_count + 1)
-            return "false"
 
 
 

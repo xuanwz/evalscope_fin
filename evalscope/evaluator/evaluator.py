@@ -8,7 +8,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 from tqdm import tqdm
 from typing import Any, Dict, List, Optional, Union
-
 from evalscope.benchmarks import DataAdapter
 from evalscope.config import TaskConfig
 from evalscope.constants import AnswerKeys, DumpMode, EvalStage, EvalType, ReviewKeys
@@ -93,13 +92,19 @@ class Evaluator(object):
         return answer_d
 
     def _get_answer(self, input_prompts, subset_name, infer_cfg) -> List[dict]:
-        answers_list = []
-        answer_ds: List[dict] = self.model_adapter.predict(inputs=input_prompts, infer_cfg=infer_cfg)
-        for answer_d, input_prompt in zip(answer_ds, input_prompts):
-            answer_id = self._generate_answer_id(self.model_adapter.model_cfg, input_prompt, infer_cfg)
-            processed_answer = self._process_answer(answer_d, input_prompt, subset_name, answer_id)
-            answers_list.append(processed_answer)
-        return answers_list
+        try:
+            answers_list = []
+            answer_ds: List[dict] = self.model_adapter.predict(inputs=input_prompts, infer_cfg=infer_cfg)
+            if answer_ds:  # 确保返回结果不为 None
+                for answer_d, input_prompt in zip(answer_ds, input_prompts):
+                    if answer_d:  # 检查单个答案是否有效
+                        answer_id = self._generate_answer_id(self.model_adapter.model_cfg, input_prompt, infer_cfg)
+                        processed_answer = self._process_answer(answer_d, input_prompt, subset_name, answer_id)
+                        answers_list.append(processed_answer)
+            return answers_list
+        except Exception as e:
+            logger.error(f'获取答案失败: {str(e)}')
+            return []  # 发生错误时返回空列表而不是抛出异常
 
     @staticmethod
     def filter_answer(use_cache, prompts_list, pred_file_path) -> dict:
@@ -162,11 +167,17 @@ class Evaluator(object):
                     futures = []
                     for input_prompt in prompts_list:
                         futures.append(executor.submit(self._get_answer, [input_prompt], subset_name, infer_cfg))
+                    
                     for future in as_completed(futures):
-                        answer_ds: List[dict] = future.result()
-                        answers_list.extend(answer_ds)
-                        dump_jsonl_data(answer_ds, pred_file_path, dump_mode=DumpMode.APPEND)
-                        pbar.update(len(answer_ds))
+                        try:
+                            answer_ds: List[dict] = future.result(timeout=120)  # 设置总体超时时间
+                            if answer_ds:  # 只处理成功的结果
+                                answers_list.extend(answer_ds)
+                                dump_jsonl_data(answer_ds, pred_file_path, dump_mode=DumpMode.APPEND)
+                        except Exception as e:
+                            logger.error(f'处理请求失败: {str(e)}')
+                        finally:
+                            pbar.update(1)  # 无论成功失败都更新进度条
         else:
             batch_prompts_list = [
                 prompts_list[i:i + eval_batch_size] for i in range(0, len(prompts_list), eval_batch_size)
@@ -188,7 +199,10 @@ class Evaluator(object):
             reviewer_spec = {}
 
         review_res = deepcopy(answer_d)
-        choices = review_res[AnswerKeys.CHOICES]
+        try:
+            choices = review_res[AnswerKeys.CHOICES]
+        except:
+            choices = []
         if len(choices) == 0:
             review_res[ReviewKeys.REVIEWED] = False
             review_res[ReviewKeys.REVIEW_ID] = None
@@ -235,8 +249,6 @@ class Evaluator(object):
     def get_reviews(self, subset_name: str, answers_list: List[dict], **kwargs) -> list:
         """
         Get reviews from answers.
-        It is required to rewrite this method to support your own evaluator.
-
         Args:
             subset_name: subset name of benchmark
             answers_list: inference results list.
@@ -253,16 +265,43 @@ class Evaluator(object):
         if self.use_cache and os.path.exists(review_file_path):
             logger.warning(f'Ignore use_cache={self.use_cache}, updating the review file: {review_file_path} ...')
 
-        for answer_d in tqdm(answers_list, total=len(answers_list), desc=f'Reviewing({subset_name}): '):
-            review_id, reviewer_spec = self._generate_review_id(answer_d)
-            # Get review
-            review_d = self._get_review(answer_d=answer_d, review_id=review_id, reviewer_spec=reviewer_spec)
+        review_batch_size = self.task_cfg.review_batch_size  # 使用与eval相同的batch size
 
-            logger.debug(review_d)
-
-            reviews_list.append(review_d)
-            # Dump reviews
-            dump_jsonl_data(review_d, review_file_path, dump_mode=DumpMode.APPEND)
+        if self.task_cfg.eval_type == EvalType.SERVICE:
+            with tqdm(total=len(answers_list), desc=f'Reviewing({subset_name}): ') as pbar:
+                with ThreadPoolExecutor(max_workers=review_batch_size) as executor:
+                    futures = []
+                    for answer_d in answers_list:
+                        review_id, reviewer_spec = self._generate_review_id(answer_d)
+                        futures.append(
+                            executor.submit(self._get_review, 
+                                         answer_d=answer_d, 
+                                         review_id=review_id, 
+                                         reviewer_spec=reviewer_spec)
+                        )
+                    for future in as_completed(futures):
+                        review_d = future.result()
+                        reviews_list.append(review_d)
+                        dump_jsonl_data(review_d, review_file_path, dump_mode=DumpMode.APPEND)
+                        pbar.update(1)
+        else:
+            # 对于非服务类型的评估，使用批处理方式
+            batch_answers_list = [
+                answers_list[i:i + review_batch_size] 
+                for i in range(0, len(answers_list), review_batch_size)
+            ]
+            with tqdm(total=len(answers_list), desc=f'Reviewing({subset_name}): ') as pbar:
+                for batch_answers in batch_answers_list:
+                    for answer_d in batch_answers:
+                        review_id, reviewer_spec = self._generate_review_id(answer_d)
+                        review_d = self._get_review(
+                            answer_d=answer_d,
+                            review_id=review_id,
+                            reviewer_spec=reviewer_spec
+                        )
+                        reviews_list.append(review_d)
+                        dump_jsonl_data(review_d, review_file_path, dump_mode=DumpMode.APPEND)
+                        pbar.update(1)
 
         return reviews_list
 
@@ -391,3 +430,4 @@ class Evaluator(object):
         logger.info(f'**** Evaluation finished on {self.dataset_name_or_path} ****\n')
 
         return report_map
+

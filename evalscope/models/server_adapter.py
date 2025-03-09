@@ -3,7 +3,7 @@ from collections import defaultdict
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 from openai.types.chat.chat_completion import ChatCompletionMessage, Choice
 from typing import List, Optional, Union
-
+import time
 from evalscope.models.base_adapter import BaseModelAdapter
 from evalscope.utils.logger import get_logger
 
@@ -34,7 +34,7 @@ class ServerModelAdapter(BaseModelAdapter):
         )
 
         self.seed = kwargs.get('seed', None)
-        self.timeout = kwargs.get('timeout', 60)
+        self.timeout = kwargs.get('timeout', 200)
         self.stream = kwargs.get('stream', False)
         self.model_cfg = {'api_url': api_url, 'model_id': model_id, 'api_key': api_key}
         super().__init__(model=None, model_cfg=self.model_cfg, **kwargs)
@@ -108,17 +108,23 @@ class ServerModelAdapter(BaseModelAdapter):
         logger.debug(f'Request to remote API: {request_json}')
         return request_json
 
-    def send_request(self, request_json: dict) -> dict:
-        try:
-            response = self.client.chat.completions.create(**request_json)
+    def send_request(self, request_json: dict, retry_count: int = 5) -> dict:
+        """Send request to OpenAI API with retry mechanism."""
+        for attempt in range(retry_count):
+            try:
+                response = self.client.chat.completions.create(**request_json)
 
-            if self.stream:
-                response = self._collect_stream_response(response)
+                if self.stream:
+                    response = self._collect_stream_response(response)
 
-            return response.model_dump(exclude_unset=True)
-        except Exception as e:
-            logger.error(f'Error when calling OpenAI API: {str(e)}')
-            raise
+                return response.model_dump(exclude_unset=True)
+            except Exception as e:
+                logger.error(f'Error when calling OpenAI API: {str(e)}')
+                if attempt < retry_count - 1:
+                    logger.info(f'正在重试... 第 {attempt + 2} 次尝试')
+                    time.sleep(2)
+                else:
+                    raise
 
     def _collect_stream_response(self, response_stream: List[ChatCompletionChunk]) -> ChatCompletion:
         collected_chunks = []

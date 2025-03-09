@@ -1,0 +1,4 @@
+    # llm as judge
+    eval_model: gpt-4o
+    eval_api_url: https://www.apillm.online/v1/chat/completions
+    eval_api_key: sk-nsIxq2HnRLDlg7g8C699A6B6CbD045CdB1F0DcBd4811Bb37
