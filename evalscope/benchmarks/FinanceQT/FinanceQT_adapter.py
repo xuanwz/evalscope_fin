@@ -105,17 +105,25 @@ class IQuizAdapter(DataAdapter):
         Match the gold answer and the predicted answer.
         """
 
-        llm_judger_sys_prompt = """你是一个金融题目结果评分助手，我会给你一个'标准答案'与一个'模型答案'，请根据以下规则判断'模型答案'是否与'标准答案'的含义一致。如果一致，输出1，否则输出0。
-    # 标准答案: {gold}
-    # 模型答案: {pred}
-    # 规则：
-    # 回复要求：按照以上规则给出判断，并在最后将判断结果1 or 0放在boxed{{}}中，例如boxed{{1}} or boxed{{0}}
-    """
+        llm_judger_sys_prompt = """我会给你一个有关交易策略的'代码问题',除此之外还有一个'参考回答'和一个'待打分回答'，请根据'参考回答'给'待打分回答'一个评分。
+#优先先判定'待打分回答'是不是代码，如果不是，直接评分为0；如果是，再参考下面评分标准。
+#评分标准：
+    1、如果待打分回答的代码和参考回答一致，或能正常运行且解决问题，评分为1；
+    2、如果待打分回答的代码不能解决问题或不能正常运行，评分为0；
+    3、如果待打分回答的代码出现严重逻辑错误，评分为0.
+    现在请你根据下列信息打分：
+#代码问题：{question}
+#参考回答：{gold}
+#待打分回答：{pred}
 
+# 回复要求：只给出评分，将分数放在boxed{{}}中。严禁输出思考过程，你的输出只能是回复示例中的其中一种。
+# 回复示例：boxed{{0}}，boxed{{1}}
+    """
+        
         messages = [
             {
                 "role": "user", 
-                "content": llm_judger_sys_prompt.format(gold=gold, pred=pred)
+                "content": llm_judger_sys_prompt.format(question=input_d['question'], gold=gold, pred=pred)
             }
         ]
         # 调用模型

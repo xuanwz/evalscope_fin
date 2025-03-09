@@ -105,9 +105,9 @@ class IQuizAdapter(DataAdapter):
         Match the gold answer and the predicted answer.
         """
 
-        llm_judger_sys_prompt = """你是一个金融题目结果评分助手，我会给你一个'标准答案'与一个'模型答案'，请根据以下规则判断'模型答案'是否与'标准答案'的含义一致。如果一致，输出1，否则输出0。
-    # 标准答案: {gold}
-    # 模型答案: {pred}
+        llm_judger_sys_prompt = """你是一个金融题目结果评分助手，我会给你一个'参考答案'与一个'模型回复'。你的任务是将模型回复与参考答案进行比较，并判断其正确性，如果回复正确，就输出1，否则输出0。
+    # 参考答案: {gold}
+    # 模型回复: {pred}
     # 回复要求：按照以上规则给出判断，并在最后将判断结果1 or 0放在boxed{{}}中，例如boxed{{1}} or boxed{{0}}
     """
 
