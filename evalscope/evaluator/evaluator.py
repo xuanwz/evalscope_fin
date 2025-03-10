@@ -67,11 +67,20 @@ class Evaluator(object):
         # Get prompts from dataset
         prompts = self.data_adapter.gen_prompts(data_dict=dataset)
 
-        # Limit and index prompts
+        # Limit and index prompts with random sampling
         limited_prompts = defaultdict(list)
         for subset_name, prompts_list in prompts.items():
-            limit = self.task_cfg.limit or len(prompts_list)
-            for index, prompt in enumerate(prompts_list[:limit]):
+            if self.task_cfg.limit:
+                # 确保limit不超过数据集大小
+                limit = min(self.task_cfg.limit, len(prompts_list))
+                # 随机抽样
+                import random
+                sampled_prompts = random.sample(prompts_list, limit)
+            else:
+                sampled_prompts = prompts_list
+                
+            # 为抽样后的数据添加索引
+            for index, prompt in enumerate(sampled_prompts):
                 prompt['index'] = index
                 limited_prompts[subset_name].append(prompt)
 

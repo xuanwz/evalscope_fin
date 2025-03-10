@@ -11,7 +11,7 @@ import os
 
 
 @Benchmark.register(
-    name='FinCorpus',
+    name='FinPEE',
     dataset_id=os.path.dirname(__file__),
     model_adapter=ChatGenerationModelAdapter,
     subset_list=['main'],
@@ -40,7 +40,7 @@ class IQuizAdapter(DataAdapter):
         # 遍历每个子集
         for subset in subset_list:
             # 构建JSON文件路径
-            file_path = os.path.join(dataset_path, "FinCorpus_TEST.json")
+            file_path = os.path.join(dataset_path, "finpee_test.json")
             
             # 确保文件存在
             if not os.path.exists(file_path):
@@ -58,13 +58,13 @@ class IQuizAdapter(DataAdapter):
             for item in data:
                 
                 # 构建提示词
-                prompt_text = item["instruction"]
+                prompt_text = item["question"]
 
 
 
                 test_item = {
                     'question': prompt_text,
-                    'answer': item["output"]
+                    'answer': item["answer"]
                 }
                 test_data.append(test_item)
             
@@ -109,8 +109,9 @@ class IQuizAdapter(DataAdapter):
     # 标准答案: {gold}
     # 模型答案: {pred}
     # 规则：
-    1.如果标准回答是一个数值，模型回答与标准回答的格式不一样，但是数值一致，则认为含义一致。例如：标准回答是0.98，模型回答是98%，认为含义一致，返回1
-    2.如果标准回答是一个数值，模型回答的最终结果经四舍五入后与标准回答一致，则认为含义一致。例如：标准回答是2，模型回答是1.98，认为含义一致，返回1
+    1.你只需要比较二者的最终答案，最终答案一致则输出1，不需要比较二者的推导过程。
+    2.如果标准回答是一个数值，模型回答与标准回答的格式不一样，但是数值一致，则认为含义一致。例如：标准回答是0.98，模型回答是98%，认为含义一致，返回1
+    3.如果标准回答是一个数值，模型回答的最终结果经四舍五入后与标准回答一致，则认为含义一致。例如：标准回答是2，模型回答是1.98，认为含义一致，返回1
     # 回复要求：按照以上规则给出判断，并在最后将判断结果1 or 0放在boxed{{}}中，例如boxed{{1}} or boxed{{0}}
     """
 
